@@ -1,0 +1,48 @@
+<form class="search-panel row mb-4" (ngSubmit)="handleSearchSubmit()" id="searchForm" name="searchForm">
+    <div class="col-12 col-sm-4">
+        <input id="searchTerm" name="search" type="search" [(ngModel)]="searchTerm" class="form-control" placeholder="Search in stories...">
+    </div>  
+    <div class="col-12 col-sm-4">
+      <div class="search-button-container">
+        <div class="search-button">
+          <button id="searchButton" type="submit" class="btn btn-dark">Search</button>
+        </div>
+        <div class="">
+          <h3 *ngIf="searchActive"><span class="badge text-bg-secondary">{{searchingMessage}}&nbsp;<i (click)="onCancelSearchClick()" class="bi-x-lg cancel-icon"></i></span></h3>
+        </div>      
+      </div>
+    </div>
+</form>    
+<h2 *ngIf="noDataFound" id="noData"><span class="badge text-bg-secondary text-bg-danger">No data found</span></h2>
+<div *ngIf="isLoading" class="loading-section">
+  <div class="spinner-grow" role="status">
+</div>
+</div>
+<table class="table" *ngIf="newsList && !isLoading">
+    <thead>
+      <tr>
+        <th scope="col">Id</th>
+        <th scope="col">Title</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of newsList">
+        <td>{{item.id}}</td>
+        <td><span [ngClass]="{link: item.url}" (click)="openLink(item.url)">{{item.title}}</span></td>
+      </tr>
+    </tbody>
+</table>
+<nav aria-label="Page navigation" *ngIf="newsList && !isLoading">
+    <div class="pagination-section">
+        <div class="pagination-legend">
+            <span>{{paginationLegend}}</span>
+        </div>
+        <ul class="pagination">        
+            <li class="page-item" [ngClass]="{disabled: currentPage==0}"><a id="firstPage" class="page-link" (click)="loadPage(0)" >First</a></li>
+            <li class="page-item" [ngClass]="{disabled: currentPage==0}"><a id="previousPage" class="page-link" (click)="loadPage(currentPage-1)">Previous</a></li>  
+            <li class="page-item" [ngClass]="{disabled: currentPage==totalPages-1}"><a id="nextPage" class="page-link" (click)="loadPage(currentPage+1)">Next</a></li>
+            <li class="page-item" [ngClass]="{disabled: currentPage==totalPages-1}"><a id="lastPage" class="page-link" (click)="loadPage(totalPages-1)">Last</a></li>
+        </ul>
+    </div>
+
+</nav>
