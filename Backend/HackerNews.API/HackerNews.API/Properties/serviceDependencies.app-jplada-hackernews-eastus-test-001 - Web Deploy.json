@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "apis1": {
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.ApiManagement/service/appsrv-jplada-hackernews-eastus-test-001/apis/HackerNewsAPI",
+      "type": "apis.azure"
+    }
+  }
+}
