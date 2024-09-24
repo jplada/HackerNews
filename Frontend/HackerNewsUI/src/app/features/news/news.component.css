@@ -49,6 +49,7 @@
     align-items: center;
 }
 
-.loading {
-
+.invalid-field {
+    font-size: 12px;
+    color: red;
 }

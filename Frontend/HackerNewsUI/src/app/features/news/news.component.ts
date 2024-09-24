@@ -18,6 +18,7 @@ export class NewsComponent implements OnInit{
   searchingMessage: string;
   noDataFound: boolean;
   isLoading: boolean;
+  showFormErrors: boolean;
   constructor(private newsService: NewsService) {}
 
   ngOnInit(): void {
@@ -34,6 +35,7 @@ export class NewsComponent implements OnInit{
   }
 
   getLatest(pageNumber: number){
+    this.showFormErrors = false;
     this.isLoading = true;
     this.newsService.getLatest(pageNumber,10).subscribe((response: NewsResponse)=>{
       this.displayResults(pageNumber, response);      
@@ -45,16 +47,21 @@ export class NewsComponent implements OnInit{
       this.currentSearchTerm = this.searchTerm;
       this.getSearch(0);
     }
+    else{
+      this.showFormErrors = true;
+    }
   }
 
   onCancelSearchClick(){
     this.searchActive = false;
     this.currentSearchTerm = "";
     this.searchTerm = "";
+    this.showFormErrors = false;
     this.getLatest(0);
   }  
 
   getSearch(pageNumber: number){
+    this.showFormErrors = false;
     this.isLoading = true;
     this.newsService.getSearch(this.currentSearchTerm, pageNumber,10).subscribe((response: NewsResponse)=>{
       this.searchActive = true;

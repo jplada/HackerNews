@@ -1,6 +1,9 @@
 <form class="search-panel row mb-4" (ngSubmit)="handleSearchSubmit()" id="searchForm" name="searchForm">
     <div class="col-12 col-sm-4">
-        <input id="searchTerm" name="search" type="search" [(ngModel)]="searchTerm" class="form-control" placeholder="Search in stories...">
+        <input id="searchTerm" name="search" type="search" [(ngModel)]="searchTerm" class="form-control" placeholder="Search in stories..." required  #searchTermRef="ngModel">
+        <div class="invalid-field" *ngIf="showFormErrors && !searchTermRef.valid">
+          Please enter a search text
+        </div>
     </div>  
     <div class="col-12 col-sm-4">
       <div class="search-button-container">
