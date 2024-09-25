@@ -1,6 +1,5 @@
 ﻿using HackerNews.Services.Interfaces;
 using HackerNews.Services.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HackerNews.API.Controllers
@@ -15,16 +14,10 @@ namespace HackerNews.API.Controllers
             _newsService = newsService;
         }
 
-        [HttpGet("Latest")]
-        public async Task<PagedResponseDTO<IEnumerable<NewsItem>>> Latest(int pageNumber = 0, int pageSize = 20)
-        {
-            var news = await _newsService.GetLatest(pageNumber, pageSize);
-            return news;
-        }
-
         [HttpGet("Search")]
-        public async Task<PagedResponseDTO<IEnumerable<NewsItem>>> Search(string searchTerm, int pageNumber = 0, int pageSize = 20)
+        public async Task<PagedResponseDTO<IEnumerable<NewsItem>>> Search(string? searchTerm = null, int pageNumber = 0, int pageSize = 20)
         {
+            searchTerm = searchTerm ?? string.Empty;
             var news = await _newsService.Search(searchTerm, pageNumber, pageSize);
             return news;
         }

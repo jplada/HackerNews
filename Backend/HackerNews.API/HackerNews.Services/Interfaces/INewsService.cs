@@ -8,7 +8,6 @@ namespace HackerNews.Services.Interfaces
     public interface INewsService
     {
         Task LoadLatestNewsInCache();
-        Task<PagedResponseDTO<IEnumerable<NewsItem>>> GetLatest(int pageNumber, int pageSize);
         Task<PagedResponseDTO<IEnumerable<NewsItem>>> Search(string searchTerm, int pageNumber, int pageSize);
     }
 }

@@ -10,7 +10,7 @@ namespace HackerNews.Test
     public class NewsServiceTests
     {
         [Fact]
-        public async Task GetLatest_ReturnsFirstPageCorrectly()
+        public async Task Search_WithoutSearchTerm_ReturnsFirstPageCorrectly()
         {
             var newsItems = MockedItems();
             List<NewsItem> cachedItems = newsItems.Where(i => i.id < 1006).Select(i => new NewsItem { Id = i.id, Title = i.title }).ToList();
@@ -24,11 +24,11 @@ namespace HackerNews.Test
             var cacheServiceMock = new Mock<ICacheService>();
             cacheServiceMock.Setup(mc => mc.Get<List<NewsItem>>(It.Is<string>(x => x == Constants.NewsItemsKey))).Returns(cachedItems).Verifiable();
             cacheServiceMock.Setup(mc => mc.Set(It.Is<string>(x => x == Constants.NewsItemsKey),
-                    It.Is<List<NewsItem>>(x => x.Count()==10))).Verifiable();
+                    It.Is<List<NewsItem>>(x => x.Count()==15))).Verifiable();
 
             var service = new NewsService(serviceAgentMock.Object, cacheServiceMock.Object);
 
-            var result = await service.GetLatest(0, 10);
+            var result = await service.Search(null, 0, 10);
 
             Assert.NotNull(result);
             Assert.Equal(0, result.CurrentPage);
@@ -42,7 +42,7 @@ namespace HackerNews.Test
         }
 
         [Fact]
-        public async Task GetLatest_ReturnsSecondPageCorrectly()
+        public async Task Search_WithoutSearchTerm_ReturnsSecondPageCorrectly()
         {
             var newsItems = MockedItems();
             List<NewsItem> cachedItems = newsItems.Where(i => i.id < 1006).Select(i => new NewsItem { Id = i.id, Title = i.title }).ToList();
@@ -50,16 +50,16 @@ namespace HackerNews.Test
             serviceAgentMock.Setup(m => m.GetLatest()).ReturnsAsync(newsItems.Select(i => i.id)).Verifiable();
             foreach (var item in newsItems)
             {
-                serviceAgentMock.Setup(m => m.GetItem(It.Is<int>(x => x == item.id))).ReturnsAsync(newsItems.First(i => i.id == item.id)).Verifiable();
+                serviceAgentMock.Setup(m => m.GetItem(It.Is<int>(x => x == item.id))).ReturnsAsync(newsItems.First(i => i.id == item.id));
             }
             var cacheServiceMock = new Mock<ICacheService>();
             cacheServiceMock.Setup(mc => mc.Get<List<NewsItem>>(It.Is<string>(x => x == Constants.NewsItemsKey))).Returns(cachedItems).Verifiable();
             cacheServiceMock.Setup(mc => mc.Set(It.Is<string>(x => x == Constants.NewsItemsKey),
-                    It.Is<List<NewsItem>>(x => x.Count() == 10))).Verifiable();
+                    It.Is<List<NewsItem>>(x => x.Count() == 15))).Verifiable();
 
             var service = new NewsService(serviceAgentMock.Object, cacheServiceMock.Object);
 
-            var result = await service.GetLatest(1, 10);
+            var result = await service.Search(null, 1, 10);
 
             Assert.NotNull(result);
             Assert.Equal(1, result.CurrentPage);
@@ -68,10 +68,12 @@ namespace HackerNews.Test
             Assert.Equal(5, result.Data.Count());
             Assert.Equal(1011, result.Data.First().Id);
             Assert.Equal(1015, result.Data.Last().Id);
+            serviceAgentMock.Verify();
+            cacheServiceMock.Verify();
         }
 
         [Fact]
-        public async Task GetLatest_ReturnsEmptyPageCorrectly()
+        public async Task Search_WithoutSearchTerm_ReturnsEmptyPageCorrectly()
         {
             var newsItems = MockedItems();
             List<NewsItem> cachedItems = newsItems.Where(i => i.id < 1006).Select(i => new NewsItem { Id = i.id, Title = i.title }).ToList();
@@ -86,7 +88,7 @@ namespace HackerNews.Test
 
             var service = new NewsService(serviceAgentMock.Object, cacheServiceMock.Object);
 
-            var result = await service.GetLatest(3, 10);
+            var result = await service.Search(null, 3, 10);
 
             Assert.NotNull(result);
             Assert.Equal(3, result.CurrentPage);
@@ -97,7 +99,7 @@ namespace HackerNews.Test
         }
 
         [Fact]
-        public async Task Search_ReturnsFirstPageCorrectly()
+        public async Task Search_WithSearchTerm_ReturnsFirstPageCorrectly()
         {
             var newsItems = MockedItems();
             List<NewsItem> cachedItems = newsItems.Where(i => i.id < 1006).Select(i => new NewsItem { Id = i.id, Title = i.title }).ToList();
@@ -129,7 +131,7 @@ namespace HackerNews.Test
         }
 
         [Fact]
-        public async Task Search_ReturnsSecondPageCorrectly()
+        public async Task Search_WithSearchTerm_ReturnsSecondPageCorrectly()
         {
             var newsItems = MockedItems();
             List<NewsItem> cachedItems = newsItems.Where(i => i.id < 1006).Select(i => new NewsItem { Id = i.id, Title = i.title }).ToList();

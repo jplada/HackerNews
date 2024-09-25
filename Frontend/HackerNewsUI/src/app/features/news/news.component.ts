@@ -22,24 +22,11 @@ export class NewsComponent implements OnInit{
   constructor(private newsService: NewsService) {}
 
   ngOnInit(): void {
-    this.getLatest(0);
+    this.getSearch(0);
   }
 
   loadPage(pageNumber: number){    
-    if(this.searchActive){
-      this.getSearch(pageNumber);
-    }
-    else {
-      this.getLatest(pageNumber);
-    }
-  }
-
-  getLatest(pageNumber: number){
-    this.showFormErrors = false;
-    this.isLoading = true;
-    this.newsService.getLatest(pageNumber,10).subscribe((response: NewsResponse)=>{
-      this.displayResults(pageNumber, response);      
-    });
+    this.getSearch(pageNumber);
   }
 
   handleSearchSubmit(){
@@ -57,15 +44,18 @@ export class NewsComponent implements OnInit{
     this.currentSearchTerm = "";
     this.searchTerm = "";
     this.showFormErrors = false;
-    this.getLatest(0);
+    this.getSearch(0);
   }  
 
   getSearch(pageNumber: number){
     this.showFormErrors = false;
     this.isLoading = true;
-    this.newsService.getSearch(this.currentSearchTerm, pageNumber,10).subscribe((response: NewsResponse)=>{
-      this.searchActive = true;
-      this.searchingMessage = "Searching: " + this.currentSearchTerm;
+    const searchTerm = !!this.currentSearchTerm?this.currentSearchTerm:null;
+    this.newsService.getSearch(searchTerm, pageNumber,10).subscribe((response: NewsResponse)=>{
+      if(!!this.currentSearchTerm){
+        this.searchActive = true;
+        this.searchingMessage = "Searching: " + this.currentSearchTerm;  
+      }
       this.displayResults(pageNumber, response);
     });
   }

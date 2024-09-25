@@ -40,59 +40,39 @@ namespace HackerNews.Services.Services
             cacheService.Set(Constants.NewsItemsKey, itemsResult.ToList());
         }
 
-        /// <summary>
-        /// Get latest news with pagination
-        /// </summary>
-        /// <param name="pageNumber"></param>
-        /// <param name="pageSize"></param>
-        /// <returns></returns>
-        public async Task<PagedResponseDTO<IEnumerable<NewsItem>>> GetLatest(int pageNumber, int pageSize)
+        public async Task<PagedResponseDTO<IEnumerable<NewsItem>>> Search(string searchTerm, int pageNumber, int pageSize)
         {
-            if(pageNumber<0 || pageSize < 1)
-            {
-                throw new ArgumentOutOfRangeException("Page number / page size are not valid");
-            }
-            List<NewsItem> itemsResult = new List<NewsItem>();
-            // Get Latest from external API
-            var newsItems = await _serviceAgent.GetLatest();
-            // Get news currently stored in cache
-            var cacheNewsItems = cacheService.Get<List<NewsItem>>(Constants.NewsItemsKey);
-            // Take paged latest news
-            var pagedNewsIds = newsItems.Skip(pageNumber * pageSize).Take(pageSize);
-            // Verify every news is in cache and get from external API those that aren't
-            cacheNewsItems = await EnsureAllItemsInCache(pagedNewsIds, cacheNewsItems);
-            foreach (var id in pagedNewsIds)
-            {
-                var newsItem = cacheNewsItems.FirstOrDefault(ni => ni.Id==id);
-                if (newsItem != null)
-                {
-                    itemsResult.Add(newsItem);
-                }                
-            }
+            ValidateParameters(pageNumber, pageSize);
+            var latestNewsItems = await GetNewsItems();
+            var pagedNewsItems = ApplySearchTermAndPaging(searchTerm, pageNumber, pageSize, latestNewsItems, out int totalItems);
             return new PagedResponseDTO<IEnumerable<NewsItem>>
             {
-                Data = itemsResult,
+                Data = pagedNewsItems,
                 CurrentPage = pageNumber,
-                TotalPages = ((newsItems.Count() + pageSize - 1) / pageSize),
+                TotalPages = ((totalItems + pageSize - 1) / pageSize),
                 Success = true
-            };            
+            };
         }
 
-        public async Task<PagedResponseDTO<IEnumerable<NewsItem>>> Search(string searchTerm, int pageNumber, int pageSize)
+        private void ValidateParameters(int pageNumber, int pageSize)
         {
             if (pageNumber < 0 || pageSize < 1)
             {
                 throw new ArgumentOutOfRangeException("Page number / page size are not valid");
-            }            
+            }
+        }
+
+        private async Task<List<NewsItem>> GetNewsItems()
+        {
             // Get Latest from external API
-            var latestNewsItems = await _serviceAgent.GetLatest();
+            var latestNewsItemIds = await _serviceAgent.GetLatest();
             // Get news currently stored in cache
             var cacheNewsItems = cacheService.Get<List<NewsItem>>(Constants.NewsItemsKey);
-            // Verify every news is in cache and get from external API those that aren't
-            cacheNewsItems = await EnsureAllItemsInCache(latestNewsItems, cacheNewsItems, true);
+            // Verify every item is in cache and get from external API those that aren't
+            cacheNewsItems = await EnsureAllItemsInCache(latestNewsItemIds, cacheNewsItems);
             // Set items from cache in same order as latest list
             List<NewsItem> orderedItems = new List<NewsItem>();
-            foreach (var id in latestNewsItems)
+            foreach (var id in latestNewsItemIds)
             {
                 var newsItem = cacheNewsItems.FirstOrDefault(ni => ni.Id == id);
                 if (newsItem != null)
@@ -100,29 +80,34 @@ namespace HackerNews.Services.Services
                     orderedItems.Add(newsItem);
                 }
             }
-            // Search term in title
-            List<NewsItem> itemsMatchSearch = orderedItems.Where(ni => ni.Title.ToLower()
-                .Contains(searchTerm.ToLower())).ToList();
-            // Take paged items that match search
-            var pagedNewsItems = itemsMatchSearch.Skip(pageNumber * pageSize).Take(pageSize);
-            return new PagedResponseDTO<IEnumerable<NewsItem>>
+            return orderedItems;
+        }
+
+        private IEnumerable<NewsItem> ApplySearchTermAndPaging(string searchTerm, int pageNumber, int pageSize, 
+            List<NewsItem> latestNewsItems, out int totalItems)
+        {
+            if (!string.IsNullOrEmpty(searchTerm))
             {
-                Data = pagedNewsItems,
-                CurrentPage = pageNumber,
-                TotalPages = ((itemsMatchSearch.Count() + pageSize - 1) / pageSize),
-                Success = true
-            };
+                // Search term in title
+                latestNewsItems = latestNewsItems.Where(ni => ni.Title!=null && ni.Title
+                    .Contains(searchTerm, StringComparison.CurrentCultureIgnoreCase)).ToList();
+            }
+            totalItems = latestNewsItems.Count;
+            // Take paged items that match search
+            var pagedNewsItems = latestNewsItems.Skip(pageNumber * pageSize).Take(pageSize);
+            return pagedNewsItems;
         }
 
         /// <summary>
         /// Verify every news items in an id list are stored in cache, or get from API those that aren't
-        /// Optionally remove from cache items that are not in list
+        /// Remove from cache items that are not in list
         /// </summary>
         /// <param name="newsItems"></param>
         /// <param name="cachedItems"></param>
         /// <returns></returns>
-        private async Task<List<NewsItem>> EnsureAllItemsInCache(IEnumerable<int> newsItems, List<NewsItem>cachedItems, bool removeFromCache = false)
+        private async Task<List<NewsItem>> EnsureAllItemsInCache(IEnumerable<int> newsItems, List<NewsItem>cachedItems)
         {
+            
             var itemsNotInCache = newsItems.Where(ni => !cachedItems.Any(ci => ci.Id == ni));
             if (itemsNotInCache.Any())
             {
@@ -141,11 +126,8 @@ namespace HackerNews.Services.Services
                     }
                 });
                 cachedItems.AddRange(itemsResult);
-                if (removeFromCache)
-                {
-                    // remove old entries from cache
-                    cachedItems.RemoveAll(ci => !newsItems.Contains(ci.Id));
-                }
+                // remove old entries from cache
+                cachedItems.RemoveAll(ci => !newsItems.Contains(ci.Id));
                 cacheService.Set(Constants.NewsItemsKey, cachedItems);
             }
             return cachedItems;

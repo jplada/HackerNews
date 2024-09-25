@@ -11,12 +11,12 @@ describe('NewsService', () => {
   const mockedNews = {
     data: [{
         id: 1,
-        title: "Learning Angular",
+        title: "Title 1",
         url: "http://myurl.com/news"
       },
       {
         id: 2,
-        title: "Learning CSS",
+        title: "Title 2",
         url: "http://myurl.com/news"
       }],
     totalPages: 1
@@ -35,28 +35,29 @@ describe('NewsService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should get latest news', () => {
-    service.getLatest(1,20).subscribe((response: NewsResponse) => {
-      expect(response.data).toBeTruthy();
-      expect(response.data.length).toBe(2);
-    });
-    const url = environment.baseUrl + 'Latest?pageNumber=1&pageSize=20';
-    const mockReq = httpController.expectOne(url);
-    expect(mockReq.request.method).toEqual('GET');
-    mockReq.flush(mockedNews);        
-  });  
-
   it('should search news', () => {
-    service.getSearch("learning", 1,20).subscribe((response: NewsResponse) => {
+    service.getSearch("title", 0, 20).subscribe((response: NewsResponse) => {
         expect(response.data).toBeTruthy();
         expect(response.data.length).toBe(2);
-        expect(response.data[0].title).toBe("Learning Angular");
+        expect(response.data[0].title).toBe("Title 1");
     });
-    const url = environment.baseUrl + 'Search?searchTerm=learning&pageNumber=1&pageSize=20';
+    const url = environment.baseUrl + 'Search?searchTerm=title&pageNumber=0&pageSize=20';
     const mockReq = httpController.expectOne(url);
     expect(mockReq.request.method).toEqual('GET');
     mockReq.flush(mockedNews);
-  }); 
+  });
+
+  it('should search news with empty search term', () => {
+    service.getSearch("", 0, 20).subscribe((response: NewsResponse) => {
+        expect(response.data).toBeTruthy();
+        expect(response.data.length).toBe(2);
+        expect(response.data[0].title).toBe("Title 1");
+    });
+    const url = environment.baseUrl + 'Search?pageNumber=0&pageSize=20';
+    const mockReq = httpController.expectOne(url);
+    expect(mockReq.request.method).toEqual('GET');
+    mockReq.flush(mockedNews);
+  });
 
   afterEach(() => {
     httpController.verify();

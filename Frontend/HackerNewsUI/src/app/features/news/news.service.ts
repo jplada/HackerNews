@@ -9,13 +9,9 @@ export class NewsService{
         private baseUrl = environment.baseUrl;
         constructor(private http: HttpClient){}
 
-        getLatest(pageNumber: number, pageSize: number): Observable<NewsResponse> {
-                const url = this.baseUrl + `Latest?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-                return this.http.get<NewsResponse>(url);
-	}
-
 	getSearch(searchTerm: string, pageNumber: number, pageSize: number): Observable<NewsResponse> {
-                const url = this.baseUrl + `Search?searchTerm=${searchTerm}&pageNumber=${pageNumber}&pageSize=${pageSize}`;
+                const searchTermParam = !!searchTerm?`searchTerm=${searchTerm}&`:"";                
+                const url = this.baseUrl + `Search?${searchTermParam}pageNumber=${pageNumber}&pageSize=${pageSize}`;
                 return this.http.get<NewsResponse>(url);
 	}    
     

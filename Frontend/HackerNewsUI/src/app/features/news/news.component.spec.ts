@@ -11,12 +11,11 @@ describe('NewsComponent', () => {
   var newsService = new NewsService(null);
 
   beforeEach(() => {    
-    newsService.getLatest = jasmine.createSpy().and.returnValue(of(mockedNews));
     newsService.getSearch = jasmine.createSpy().and.returnValue(of(mockedNews));
     TestBed.configureTestingModule({
       declarations: [NewsComponent],
       imports: [FormsModule],
-      providers: [NewsComponent, NewsComponent, {
+      providers: [{
         provide: NewsService, useValue: newsService
       }],
     });
@@ -30,13 +29,13 @@ describe('NewsComponent', () => {
   });
 
   it('should get latest on init', () => {
-    expect(newsService.getLatest).toHaveBeenCalled();
+    expect(newsService.getSearch).toHaveBeenCalled();
     const compiled = fixture.nativeElement as HTMLElement;
     const tbody = compiled.querySelector('tbody');
     const rows = tbody.querySelectorAll('tr');
     expect(rows.length).toBe(10);
     const span = rows[0].querySelector('span');
-    expect(span.textContent).toBe("Learning Angular");
+    expect(span.textContent).toBe("New Version of Angular");
   });  
 
   it('should display pagination after load on init', () => {
@@ -46,13 +45,14 @@ describe('NewsComponent', () => {
   });    
 
   it('should request data after click on Next', () => {
-    expect(newsService.getLatest).toHaveBeenCalled();
+    expect(newsService.getSearch).toHaveBeenCalledWith(null,0,10);
     expect(component.currentPage).toBe(0);
-    newsService.getLatest = jasmine.createSpy().and.returnValue(of(mockedNewsPage2));
+    newsService.getSearch = jasmine.createSpy().and.returnValue(of(mockedNewsPage2));
     const compiled = fixture.nativeElement as HTMLElement;
     const next = compiled.querySelector('#nextPage');    
     next.dispatchEvent(new Event('click'));
     fixture.detectChanges();
+    expect(newsService.getSearch).toHaveBeenCalledWith(null,1,10);
     expect(component.currentPage).toBe(1);
     const tbody = compiled.querySelector('tbody');
     const rows = tbody.querySelectorAll('tr');
@@ -60,13 +60,14 @@ describe('NewsComponent', () => {
   });  
 
   it('should request data after click on Last', () => {
-    expect(newsService.getLatest).toHaveBeenCalled();
+    expect(newsService.getSearch).toHaveBeenCalledWith(null,0,10);
     expect(component.currentPage).toBe(0);
-    newsService.getLatest = jasmine.createSpy().and.returnValue(of(mockedNewsPage2));
+    newsService.getSearch = jasmine.createSpy().and.returnValue(of(mockedNewsPage2));
     const compiled = fixture.nativeElement as HTMLElement;
     const next = compiled.querySelector('#lastPage');    
     next.dispatchEvent(new Event('click'));
     fixture.detectChanges();
+    expect(newsService.getSearch).toHaveBeenCalledWith(null,1,10);
     expect(component.currentPage).toBe(1);
     const tbody = compiled.querySelector('tbody');
     const rows = tbody.querySelectorAll('tr');
@@ -76,11 +77,12 @@ describe('NewsComponent', () => {
   it('should search after Search Form submit', () => {
     component.searchTerm = 'Data';    
     const compiled = fixture.nativeElement as HTMLElement;
-    const searchButton = compiled.querySelector('#searchForm');    
-    searchButton.dispatchEvent(new Event('submit'));
+    const searchForm = compiled.querySelector('#searchForm');    
+    searchForm.dispatchEvent(new Event('submit'));
     fixture.detectChanges();
-    expect(newsService.getSearch).toHaveBeenCalled();
+    expect(newsService.getSearch).toHaveBeenCalledWith('Data',0,10);
     expect(component.currentPage).toBe(0);
+    expect(component.searchActive).toBeTrue();
     const tbody = compiled.querySelector('tbody');
     const rows = tbody.querySelectorAll('tr');
     expect(rows.length).toBe(10);
@@ -90,10 +92,10 @@ describe('NewsComponent', () => {
     newsService.getSearch = jasmine.createSpy().and.returnValue(of(mockedEmptySearch));
     component.searchTerm = 'Data';
     const compiled = fixture.nativeElement as HTMLElement;
-    const searchButton = compiled.querySelector('#searchForm');    
-    searchButton.dispatchEvent(new Event('submit'));
+    const searchForm = compiled.querySelector('#searchForm');    
+    searchForm.dispatchEvent(new Event('submit'));
     fixture.detectChanges();
-    expect(newsService.getSearch).toHaveBeenCalled();
+    expect(newsService.getSearch).toHaveBeenCalledWith('Data',0,10);
     const noData = compiled.querySelector('#noData');
     const tbody = compiled.querySelector('tbody');
     const pagination = compiled.querySelector('.pagination-section');    
@@ -106,12 +108,12 @@ describe('NewsComponent', () => {
 const mockedNews = {
   data: [{
       id: 1,
-      title: "Learning Angular",
+      title: "New Version of Angular",
       url: "http://myurl.com/news"
     },
     {
       id: 2,
-      title: "Learning CSS",
+      title: "Title",
       url: "http://myurl.com/news"
     },
     {

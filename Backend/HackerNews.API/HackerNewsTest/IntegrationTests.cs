@@ -6,34 +6,50 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace HackerNews.Test
 {
+    [Collection("NewsServiceFixture collection")]
     public class IntegrationTests
     {
-        // Run features from controllers to HAckerNews API calls with actual implementations
-        INewsService newsService { get; set; }
-        public IntegrationTests()
+        // Utility object that is created once for all unit tests
+        NewsServiceFixture fixture;
+
+        public IntegrationTests(NewsServiceFixture fixture)
         {
-            newsService = Provider().GetService<INewsService>();
-            newsService.LoadLatestNewsInCache().GetAwaiter().GetResult();
-        }
-        [Fact]
-        public async Task Latest_ReturnsData()
-        {
-            NewsController controller = new NewsController(newsService);
-            var result = await controller.Latest();
-            Assert.NotNull(result);
-            Assert.True(result.Success);
-            Assert.NotNull(result.Data);
-            Assert.NotEmpty(result.Data);
+            this.fixture = fixture;            
         }
 
         [Fact]
         public async Task Search_ReturnsData()
         {
-            NewsController controller = new NewsController(newsService);
+            NewsController controller = new NewsController(fixture.NewsService);
             var result = await controller.Search("the");
             Assert.NotNull(result);
             Assert.True(result.Success);
         }
+
+        [Fact]
+        public async Task Search_EmptySearchTerm_ReturnsData()
+        {
+            NewsController controller = new NewsController(fixture.NewsService);
+            var result = await controller.Search(null, 0, 10);
+            Assert.NotNull(result);
+            Assert.True(result.Success);
+        }
+
+
+    }
+
+    public class NewsServiceFixture : IDisposable
+    {
+        public INewsService NewsService { get; set; }
+        public NewsServiceFixture()
+        {
+            NewsService = Provider().GetService<INewsService>();
+            NewsService.LoadLatestNewsInCache().GetAwaiter().GetResult();
+        }
+
+        public void Dispose()
+        {
+        }        
 
         private static IServiceProvider Provider()
         {
@@ -53,5 +69,10 @@ namespace HackerNews.Test
             services.AddSingleton<IConfiguration>(configuration);
             return services.BuildServiceProvider();
         }
+    }
+
+    [CollectionDefinition("NewsServiceFixture collection")]
+    public class ServiceProviderCollection : ICollectionFixture<NewsServiceFixture>
+    {
     }
 }

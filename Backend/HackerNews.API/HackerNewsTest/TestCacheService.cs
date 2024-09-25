@@ -24,7 +24,14 @@ namespace HackerNews.Test
         {
             if(key is not null && value is not null)
             {
-                _cache.Add(key.ToString(), value);
+                if (_cache.ContainsKey((string)key))
+                {
+                    _cache[(string)key] = value;
+                }
+                else
+                {
+                    _cache.Add(key.ToString(), value);
+                }                
             }            
         }
     }

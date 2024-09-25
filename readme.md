@@ -3,12 +3,13 @@
 ## Backend
 
 Created with .Net 8.  
-The App has 2 endpoints:  
-Latest: Gets the latest news with paging  
-Search: Searchs within the latest news with paging  
+The App has one endpoint to search within latest news with paging:  
+api/News/Search?searchTerm=term&pageNumber=0&pageSize=20  
+The search term is searched in the items name.  
+When the search term is empty all latest items are returned.  
 
 All latest news items are loaded on start up and stored in cache, to speed up queries.  
-On client requests the latest list is retrieved from HackerNews API, and items get from cache.  
+On call of the Search endpoint the latest list of ids is retrieved from HackerNews API, and items are get from cache.  
 Items that are not available in cache are retrieved from API.  
 
 ## FrontEnd
@@ -32,5 +33,5 @@ Navigate in browser to http://localhost:4200/
 
 ## Hours worked
 
-Backend: 10 hours  
-Frontend: 14 hours  
+Backend: 13 hours  
+Frontend: 15 hours  
